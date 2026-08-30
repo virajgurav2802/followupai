@@ -50,40 +50,43 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
   });
 });
 
-// Start listening and keep the Node process alive
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`[FollowUpAI Server] Running on http://localhost:${PORT}`);
-  console.log(`[FollowUpAI Server] Health endpoint ready at http://localhost:${PORT}/api/health`);
+// Start a persistent server only during local development.
+// On Vercel, the Express app is exported and handled as a serverless function.
+if (process.env.VERCEL !== '1') {
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`[FollowUpAI Server] Running on http://localhost:${PORT}`);
+    console.log(
+      `[FollowUpAI Server] Health endpoint ready at http://localhost:${PORT}/api/health`
+    );
 
-  // Startup validation: check if GEMINI_API_KEY is configured
-  if (!SERVER_CONFIG.isGeminiConfigured) {
-    console.error('[Gemini] ERROR: GEMINI_API_KEY is missing from .env.server');
-  } else {
-    console.log('[Gemini] Service configured and ready.');
-  }
-});
-
-// Explicitly reference the server handle so the event loop remains active
-server.ref();
-
-// Graceful termination handling
-server.on('error', (err: any) => {
-  console.error('[FollowUpAI Server Error]:', err);
-});
-
-process.on('SIGTERM', () => {
-  console.log('[FollowUpAI Server] Received SIGTERM. Shutting down gracefully...');
-  server.close(() => {
-    process.exit(0);
+    if (!SERVER_CONFIG.isGeminiConfigured) {
+      console.error(
+        '[Gemini] ERROR: GEMINI_API_KEY is missing from .env.server'
+      );
+    } else {
+      console.log('[Gemini] Service configured and ready.');
+    }
   });
-});
 
-process.on('SIGINT', () => {
-  console.log('[FollowUpAI Server] Received SIGINT. Shutting down gracefully...');
-  server.close(() => {
-    process.exit(0);
+  server.on('error', (err: any) => {
+    console.error('[FollowUpAI Server Error]:', err);
   });
-});
 
-export { app, server };
+  process.on('SIGTERM', () => {
+    console.log('[FollowUpAI Server] Received SIGTERM. Shutting down gracefully...');
+    server.close(() => {
+      process.exit(0);
+    });
+  });
+
+  process.on('SIGINT', () => {
+    console.log('[FollowUpAI Server] Received SIGINT. Shutting down gracefully...');
+    server.close(() => {
+      process.exit(0);
+    });
+  });
+}
+
+// Export Express app for Vercel
+export { app };
 export default app;
