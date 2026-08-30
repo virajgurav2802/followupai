@@ -1,12 +1,17 @@
 // 1. Single authoritative environment initialization must occur first
-import './env';
-import { SERVER_CONFIG } from './env';
+
+import './env.js';
+
+import { SERVER_CONFIG } from './env.js';
 
 import express from 'express';
+
 import cors from 'cors';
-import { aiRouter } from './aiServer';
+
+import { aiRouter } from './aiServer.js';
 
 const app = express();
+
 const PORT = SERVER_CONFIG.PORT;
 
 // Middlewares: Support dynamic development frontend origins safely
